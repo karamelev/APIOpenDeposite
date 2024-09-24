@@ -1,0 +1,251 @@
+openapi: 3.0.0
+info:
+  title: Deposit API
+  description: API для открытия, получения, обновления и удаления депозитов клиентов
+  version: 1.0.0
+servers:
+  - url: https://localhost:8080/v1
+paths:
+  /clients/{clientId}/deposits:
+    post:
+      summary: Открыть новый депозит для клиента
+      description: Создать новый депозит для клиента
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          description: Идентификатор клиента
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                depositType:
+                  type: string
+                  example: string
+                amount:
+                  type: number
+                  format: double
+                  example: 10000
+                currency:
+                  type: string
+                  example: USD
+                term:
+                  type: integer
+                  description: Срок депозита в месяцах
+                  example: 12
+                interestRate:
+                  type: number
+                  format: float
+                  example: 3.5
+                autoRenewal:
+                  type: boolean
+                  example: true
+      responses:
+        '201':
+          description: Депозит успешно создан
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  depositId:
+                    type: string
+                    example: dep_12345
+                  clientId:
+                    type: string
+                    example: client_67890
+                  amount:
+                    type: number
+                    format: double
+                    example: 10000
+                  currency:
+                    type: string
+                    example: USD
+                  term:
+                    type: integer
+                    example: 12
+                  status:
+                    type: string
+                    example: active
+        '400':
+          description: Неверные параметры запроса
+        '404':
+          description: Клиент не найден
+    get:
+      summary: Получить депозиты клиента
+      description: Возвращает список депозитов клиента 
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          description: Идентификатор клиента
+          schema:
+            type: string
+        - name: currency
+          in: query
+          schema:
+            type: string
+          description: Валюта депозита
+          example: USD
+      responses:
+        '200':
+          description: Успешный ответ сo списком депозитов
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deposits:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Deposit'
+                  
+        '404':
+          description: Депозиты не найдены
+  /clients/{clientId}/deposits/{depositId}:
+    get:
+      summary: Получить информацию о депозите клиента
+      description: Получить детали конкретного депозита клиента.
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          description: Идентификатор клиента
+          schema:
+            type: string
+        - name: depositId
+          in: path
+          required: true
+          description: Идентификатор депозита
+          schema:
+            type: string
+       
+      responses:
+        '200':
+          description: Успешный ответ с деталями депозита
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  depositId:
+                    type: string
+                    example: dep_12345
+                  clientId:
+                    type: string
+                    example: client_67890
+                  amount:
+                    type: number
+                    format: double
+                    example: 10000
+                  currency:
+                    type: string
+                    example: USD
+                  term:
+                    type: integer
+                    example: 12
+                  status:
+                    type: string
+                    example: active
+        '404':
+          description: Депозит не найден
+    put:
+      summary: Обновить информацию о депозите клиента
+      description: Обновить данные существующего депозита.
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          description: Идентификатор клиента
+          schema:
+            type: string
+        - name: depositId
+          in: path
+          required: true
+          description: Идентификатор депозита
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  format: double
+                  example: 15000
+                currency:
+                  type: string
+                  example: EUR
+                term:
+                  type: integer
+                  example: 24
+                newInterestRate:
+                  type: number
+                  format: float
+                  example: 4
+                comments:
+                  type: string
+                  example: Повышение процентной ставки 
+      responses:
+        '200':
+          description: Информация о депозите успешно обновлена
+        '404':
+          description: Депозит не найден
+        '412':
+          description: Конфликт версий, данные устарели
+    delete:
+      summary: Удалить депозит клиента
+      description: Удалить депозит по его идентификатору.
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: depositId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: X-Reason
+          in: header
+          schema:
+            type: string
+          description: Причина закрытия депозита
+      responses:
+        '204':
+          description: Депозит успешно удалён
+        '404':
+          description: Депозит не найден
+components:
+  schemas:
+    Deposit:
+      type: object
+      properties:
+        depositId:
+          type: string
+          example: dep_12345
+        clientId:
+          type: string
+          example: client_67890
+        amount:
+          type: number
+          format: double
+          example: 10000
+        currency:
+          type: string
+          example: USD
+        term:
+          type: integer
+          example: 12
+        status:
+          type: string
+          example: active
